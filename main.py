@@ -11,9 +11,10 @@ import pandas as pd
 from statsmodels.stats.contingency_tables import cochrans_q
 from scipy.stats import chi2, f
 import numpy as np
+from statistics import stdev
 
 ###Dados e critério
-# R1<-c(10.5000,9.6000,19.4000,9.5000,10.0000,9.6000,9.8000,9.8000,18.8000,10.2000,9.8000,10.2000)
+# R1<-c(10.5000,9.6000,10.4000,9.5000,10.0000,9.6000,9.8000,9.8000,18.8000,10.2000,9.8000,10.2000)
 # R2<-c(10.4000,9.5000,9.9000,9.9000,9.7000,10.1000,10.4000,10.2000,10.7000,10.0000,9.5000,10.0000)
 # sigmap<-1.140
 
@@ -40,6 +41,7 @@ sigmap=1.140
 
 dic = {1:R1, 2:R2}
 df = pd.DataFrame(dic)
+m = (len(R1)+len(R2))/2
 
 df['Di2']=(df[1] - df[2])**2
 sum_Di2= df['Di2'].sum()
@@ -61,13 +63,13 @@ if (coch_cal<=coch_tab):
     ###
     ###Cálculo da Variação Analítica
 
-    s2an= sum_Di2/(len(df))
+    s2an= sum_Di2/m
 
     ###Cálculo da Variação Amostral
 
 
-    df['si'] = df[1]+df[2]
-    Vs=df['si'].std()
+    si = R1+R2
+    Vs= stdev(si)
     s2sam=((Vs/2)-s2an)/2
 
     ###Cálculo do Valor Crítico
@@ -76,7 +78,7 @@ if (coch_cal<=coch_tab):
     # F2<-(qf(0.95,m-1,m,lower.tail=TRUE)-1)/2
     # C<-(F1*(0.3*sigmap)^2)+(F2*s2an)
 
-    F1 = chi2.ppf(0.95, ((len(df)/2) - 1))/((len(df)/2) - 1)
+    F1 = chi2.ppf(0.95, ((2*m) - 1))/((2*m) - 1)
     f_test = np.var(R1, ddof=1)/np.var(R2, ddof=1)
     F2 = f.pdf(f_test, df[[1]].shape[0], df[[2]].shape[0])
     C = (F1*(0.3*sigmap)**2)+(F2*s2an)
@@ -84,7 +86,7 @@ if (coch_cal<=coch_tab):
     # ###Decisão Final
 
     # dec<-ifelse(s2sam<=C,"aprovada","reprovada")
-    dec = "aprovada" if s2sam<=C else "reprovado"
+    dec = "aprovado" if s2sam<=C else "reprovado"
     print(f'''
 a variância amostral foi de {round(s2sam,4)}
 a variância do EP foi de {round((sigmap**2),4)}
